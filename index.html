@@ -419,7 +419,7 @@ header > #loginButton,
 <div class="modal-overlay" id="adminModal" style="display:none;">
     <div class="auth-container" style="max-width:500px;">
         <span class="close-btn" onclick="closeAdmin()">×</span>
-        <h2 style="color:#ffd43b;">🔧 Quản lý Key</h2><p style="color:#aaa;font-size:13px;margin-bottom:12px;">Tài khoản: <b>admin1</b> hoặc <b>admin2</b> · Mật khẩu: <b>Dinhthanhdat0403</b></p>
+        <h2 style="color:#ffd43b;">🔧 Quản lý Key</h2><p style="color:#aaa;font-size:13px;margin-bottom:12px;">Tài khoản:
         <div id="adminLogin" style="display:block;">
             <div class="form-group"><label>Tài khoản Admin</label><input id="adminUser" type="text" placeholder="admin1 hoặc admin2"></div>
             <div class="form-group"><label>Mật khẩu Admin</label><div class="password-wrap"><input id="adminPass" type="password" placeholder="Nhập mật khẩu admin..."><button type="button" class="password-eye" onclick="togglePassword(this)" aria-label="Hiện/ẩn mật khẩu">👁️</button></div></div>
@@ -626,8 +626,8 @@ function processOrder(orderOrPlan, price) {
 // ============================================================
 // 2 tài khoản Admin dùng chung mật khẩu
 const ADMIN_ACCOUNTS = {
-    admin1: 'Dinhthanhdat0403',
-    admin2: 'Dinhthanhdat0403'
+    admin1: '',
+    admin2: ''
 };
 let currentAdmin = null;
 
@@ -649,7 +649,7 @@ function adminLogin() {
     const pass = document.getElementById('adminPass').value;
 
     const validAccounts = {
-        'admin1': 'Dinhthanhdat0403',
+        'admin1': 'thebin36',
         'admin2': 'Dinhthanhdat0403'
     };
 
