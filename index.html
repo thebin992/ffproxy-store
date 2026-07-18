@@ -326,7 +326,8 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
     </div>
 
     <div id="admin-topup-panel">
-      <h3 style="margin-bottom:16px;text-align:center">⏳ Yêu cầu nạp tiền chờ duyệt</h3>
+      <h3 style="margin-bottom:8px;text-align:center">⏳ Yêu cầu nạp tiền chờ duyệt</h3>
+      <p style="text-align:center;font-size:.78rem;color:var(--muted);margin-bottom:16px">📋 Mọi yêu cầu nạp được gửi trực tiếp về <b style="color:var(--cyan)">Telegram @ntbfluoriteios</b>. Danh sách dưới đây chỉ hiển thị yêu cầu tạo trên thiết bị này.</p>
       <div id="topup-list"></div>
     </div>
 
@@ -599,11 +600,18 @@ async function sendTelegramNotification(username,email,password){
   try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});}catch(e){console.error('Telegram error:',e);}
 }
 
-// Gửi yêu cầu nạp tiền qua Telegram cho admin
+// Gửi yêu cầu nạp tiền qua Telegram cho admin — kiểm tra kết quả trả về để báo lỗi nếu thất bại
 async function sendTopUpRequestTelegram(request){
   const timestamp=new Date().toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
   const message="💰 YÊU CẦU NẠP TIỀN\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+request.user_name+"\n📧 Email: "+request.user_email+"\n💵 Số tiền: "+fmtMoney(request.amount)+"\n📝 Nội dung CK: "+request.note+"\n🆔 Mã yêu cầu: "+request.id+"\n🕐 Thời gian: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n⏳ Trạng thái: CHỜ DUYỆT\n\n⚠️ Vào Admin Panel để duyệt yêu cầu này.\n🌐 Nguồn: FF Proxy Delta";
-  try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});}catch(e){console.error('Telegram error:',e);}
+  try{
+    const res=await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});
+    const data=await res.json();
+    return{ok:data.ok===true,error:data.ok?null:(data.description||('HTTP '+res.status))};
+  }catch(e){
+    console.error('Telegram error:',e);
+    return{ok:false,error:String(e)};
+  }
 }
 
 // Gửi kết quả duyệt qua Telegram
@@ -669,6 +677,7 @@ function openTopUp(amount){
 let curNote='',curTopUp=0;
 
 // ===== SỬA LỖI: KHÔNG CỘNG SỐ DƯ NGAY — tạo yêu cầu nạp, gửi Telegram admin duyệt =====
+// Đã sửa: kiểm tra kết quả gửi Telegram, báo lỗi rõ cho khách + hướng dẫn liên hệ admin dự phòng nếu gửi thất bại
 async function submitPayment(){
   const s=getSession();
   if(!s){openAuth();return;}
@@ -709,10 +718,18 @@ async function submitPayment(){
   requests.push(request);
   saveTopUpRequests(requests);
 
-  // Gửi thông báo Telegram cho admin
-  await sendTopUpRequestTelegram(request);
+  // Gửi thông báo Telegram cho admin — kiểm tra kết quả trả về
+  const tgResult=await sendTopUpRequestTelegram(request);
 
-  // Hiển thị thành công — số dư chưa cộng
+  // Nếu gửi Telegram thất bại → báo rõ cho khách, mở lại nút để thử lại hoặc liên hệ admin dự phòng
+  if(!tgResult.ok){
+    alert('⚠️ KHÔNG gửi được yêu cầu nạp đến admin qua Telegram!\n\nLý do: '+tgResult.error+'\n\n👉 Vui lòng nhắn trực tiếp cho admin qua Telegram @ntbfluoriteios (hoặc Zalo 0876402100) với:\n• Nội dung chuyển khoản: '+note+'\n• Số tiền: '+fmtMoney(amount)+'\n\nSau đó nhấn lại "Gửi yêu cầu nạp" để thử lại.');
+    btn.textContent='📨 Gửi yêu cầu nạp';
+    btn.disabled=false;
+    return;
+  }
+
+  // Gửi thành công — hiển thị kết quả
   document.getElementById('success-note').textContent=note;
   document.getElementById('success-amount').textContent=fmtMoney(amount);
   document.getElementById('pay-step-info').style.display='none';
@@ -833,7 +850,7 @@ function renderTopUpList(){
   const list=document.getElementById('topup-list');
   updateAdminStats();
   if(requests.length===0){
-    list.innerHTML='<div class="empty-state">Chưa có yêu cầu nạp nào.</div>';
+    list.innerHTML='<div class="empty-state">Chưa có yêu cầu nạp nào trên thiết bị này. Các yêu cầu từ khách được gửi trực tiếp về Telegram @ntbfluoriteios.</div>';
     return;
   }
   list.innerHTML=requests.map(r=>{
