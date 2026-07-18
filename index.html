@@ -326,8 +326,10 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
     </div>
 
     <div id="admin-topup-panel">
-      <h3 style="margin-bottom:8px;text-align:center">⏳ Yêu cầu nạp tiền chờ duyệt</h3>
-      <p style="text-align:center;font-size:.78rem;color:var(--muted);margin-bottom:16px">📋 Mọi yêu cầu nạp được gửi trực tiếp về <b style="color:var(--cyan)">Telegram @ntbfluoriteios</b>. Danh sách dưới đây chỉ hiển thị yêu cầu tạo trên thiết bị này.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <h3 style="margin:0;text-align:center;flex:1">⏳ Yêu cầu nạp tiền chờ duyệt</h3>
+        <button class="btn-sm" onclick="renderTopUpList()">🔄 Làm mới</button>
+      </div>
       <div id="topup-list"></div>
     </div>
 
@@ -483,13 +485,44 @@ function getKeys(){return JSON.parse(localStorage.getItem('ff_keys')||'[]');}
 function saveKeys(k){localStorage.setItem('ff_keys',JSON.stringify(k));}
 function getSession(){return JSON.parse(localStorage.getItem('ff_session')||'null');}
 function setSession(s){if(s)localStorage.setItem('ff_session',JSON.stringify(s));else localStorage.removeItem('ff_session');}
-function getBalance(){return parseInt(localStorage.getItem('ff_balance')||'0');}
-function setBalance(v){localStorage.setItem('ff_balance',String(v));}
+
+// Số dư được lưu theo từng tài khoản, không dùng 1 biến chung cho mọi user
+function getBalance(email){
+  const s=getSession();
+  const target=(email||s?.email||'').toLowerCase();
+  if(!target)return 0;
+  const user=getUsers().find(u=>String(u.email||'').toLowerCase()===target);
+  return parseInt(user?.balance||'0');
+}
+function setBalance(v,email){
+  const s=getSession();
+  const target=(email||s?.email||'').toLowerCase();
+  if(!target)return;
+  const users=getUsers();
+  const user=users.find(u=>String(u.email||'').toLowerCase()===target);
+  if(user){user.balance=Math.max(0,parseInt(v)||0);saveUsers(users);}
+}
 function getRevenue(){return parseInt(localStorage.getItem('ff_revenue')||'0');}
 function addRevenue(v){localStorage.setItem('ff_revenue',String(getRevenue()+v));}
+
 // Top-up requests storage
 function getTopUpRequests(){return JSON.parse(localStorage.getItem('ff_topup_requests')||'[]');}
 function saveTopUpRequests(r){localStorage.setItem('ff_topup_requests',JSON.stringify(r));}
+
+// Đồng bộ lại giao diện khi admin/user mở nhiều tab cùng một website
+window.addEventListener('storage',function(e){
+  if(['ff_users','ff_topup_requests','ff_keys','ff_revenue'].includes(e.key)){
+    try{
+      updateAuthArea();
+      renderPriceCards();
+      if(document.getElementById('admin-page')?.style.display==='block'){
+        renderTopUpList();
+        renderKeys();
+        updateAdminStats();
+      }
+    }catch(err){}
+  }
+});
 
 // ===== SCROLL =====
 function scrollTo(id){hideAdmin();document.getElementById(id)?.scrollIntoView({behavior:'smooth'});}
@@ -600,18 +633,11 @@ async function sendTelegramNotification(username,email,password){
   try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});}catch(e){console.error('Telegram error:',e);}
 }
 
-// Gửi yêu cầu nạp tiền qua Telegram cho admin — kiểm tra kết quả trả về để báo lỗi nếu thất bại
+// Gửi yêu cầu nạp tiền qua Telegram cho admin
 async function sendTopUpRequestTelegram(request){
   const timestamp=new Date().toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
   const message="💰 YÊU CẦU NẠP TIỀN\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+request.user_name+"\n📧 Email: "+request.user_email+"\n💵 Số tiền: "+fmtMoney(request.amount)+"\n📝 Nội dung CK: "+request.note+"\n🆔 Mã yêu cầu: "+request.id+"\n🕐 Thời gian: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n⏳ Trạng thái: CHỜ DUYỆT\n\n⚠️ Vào Admin Panel để duyệt yêu cầu này.\n🌐 Nguồn: FF Proxy Delta";
-  try{
-    const res=await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});
-    const data=await res.json();
-    return{ok:data.ok===true,error:data.ok?null:(data.description||('HTTP '+res.status))};
-  }catch(e){
-    console.error('Telegram error:',e);
-    return{ok:false,error:String(e)};
-  }
+  try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});}catch(e){console.error('Telegram error:',e);}
 }
 
 // Gửi kết quả duyệt qua Telegram
@@ -677,7 +703,6 @@ function openTopUp(amount){
 let curNote='',curTopUp=0;
 
 // ===== SỬA LỖI: KHÔNG CỘNG SỐ DƯ NGAY — tạo yêu cầu nạp, gửi Telegram admin duyệt =====
-// Đã sửa: kiểm tra kết quả gửi Telegram, báo lỗi rõ cho khách + hướng dẫn liên hệ admin dự phòng nếu gửi thất bại
 async function submitPayment(){
   const s=getSession();
   if(!s){openAuth();return;}
@@ -718,18 +743,10 @@ async function submitPayment(){
   requests.push(request);
   saveTopUpRequests(requests);
 
-  // Gửi thông báo Telegram cho admin — kiểm tra kết quả trả về
-  const tgResult=await sendTopUpRequestTelegram(request);
+  // Gửi thông báo Telegram cho admin
+  await sendTopUpRequestTelegram(request);
 
-  // Nếu gửi Telegram thất bại → báo rõ cho khách, mở lại nút để thử lại hoặc liên hệ admin dự phòng
-  if(!tgResult.ok){
-    alert('⚠️ KHÔNG gửi được yêu cầu nạp đến admin qua Telegram!\n\nLý do: '+tgResult.error+'\n\n👉 Vui lòng nhắn trực tiếp cho admin qua Telegram @ntbfluoriteios (hoặc Zalo 0876402100) với:\n• Nội dung chuyển khoản: '+note+'\n• Số tiền: '+fmtMoney(amount)+'\n\nSau đó nhấn lại "Gửi yêu cầu nạp" để thử lại.');
-    btn.textContent='📨 Gửi yêu cầu nạp';
-    btn.disabled=false;
-    return;
-  }
-
-  // Gửi thành công — hiển thị kết quả
+  // Hiển thị thành công — số dư chưa cộng
   document.getElementById('success-note').textContent=note;
   document.getElementById('success-amount').textContent=fmtMoney(amount);
   document.getElementById('pay-step-info').style.display='none';
@@ -850,7 +867,7 @@ function renderTopUpList(){
   const list=document.getElementById('topup-list');
   updateAdminStats();
   if(requests.length===0){
-    list.innerHTML='<div class="empty-state">Chưa có yêu cầu nạp nào trên thiết bị này. Các yêu cầu từ khách được gửi trực tiếp về Telegram @ntbfluoriteios.</div>';
+    list.innerHTML='<div class="empty-state">Chưa có yêu cầu nạp nào.</div>';
     return;
   }
   list.innerHTML=requests.map(r=>{
@@ -887,8 +904,10 @@ async function approveTopUp(requestId){
   const req=requests.find(r=>r.id===requestId);
   if(!req){alert('Không tìm thấy yêu cầu.');return;}
   if(req.status!=='pending'){alert('Yêu cầu này đã được xử lý.');return;}
-  // CỘNG SỐ DƯ CHỈ KHI ADMIN DUYỆT
-  setBalance(getBalance()+req.amount);
+  // CỘNG ĐÚNG SỐ DƯ CHO TÀI KHOẢN ĐÃ GỬI YÊU CẦU
+  const targetUser=getUsers().find(u=>String(u.email||'').toLowerCase()===String(req.user_email||'').toLowerCase());
+  if(!targetUser){alert('Không tìm thấy tài khoản khách hàng: '+req.user_email);return;}
+  setBalance(getBalance(req.user_email)+req.amount,req.user_email);
   addRevenue(req.amount);
   req.status='approved';
   req.reviewed_date=new Date().toISOString();
@@ -962,6 +981,22 @@ function deleteKey(id){
   const keys=getKeys().filter(x=>String(x.id)!==String(id));
   saveKeys(keys);renderKeys();updateAdminStats();renderPriceCards();
 }
+
+
+// ===== MIGRATION SỐ DƯ CŨ =====
+(function migrateLegacyBalance(){
+  const legacy=localStorage.getItem('ff_balance');
+  const s=getSession();
+  if(legacy!==null && s?.email){
+    const users=getUsers();
+    const user=users.find(u=>String(u.email||'').toLowerCase()===String(s.email).toLowerCase());
+    if(user && (!user.balance || user.balance===0)){
+      user.balance=parseInt(legacy)||0;
+      saveUsers(users);
+    }
+    localStorage.removeItem('ff_balance');
+  }
+})();
 
 // ===== INIT =====
 (function seedAdmin(){
