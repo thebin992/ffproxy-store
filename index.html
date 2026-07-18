@@ -211,6 +211,10 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
 .topup-amount{font-size:1.1rem;font-weight:700;color:var(--neon);font-family:'JetBrains Mono'}
 .topup-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .empty-state{text-align:center;color:var(--dim);padding:40px 20px;font-size:.85rem}
+.tg-setup{background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.12);border-radius:14px;padding:18px;margin-bottom:18px}
+.tg-setup h4{font-size:.9rem;font-weight:700;margin-bottom:8px;color:var(--purple)}
+.tg-setup p{font-size:.78rem;color:var(--muted);line-height:1.6;margin-bottom:12px}
+.tg-setup-btns{display:flex;gap:8px;flex-wrap:wrap}
 @media(max-width:640px){
   header{padding:12px 4%}
   .logo{font-size:18px}
@@ -275,8 +279,8 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
   <div class="steps">
     <div class="step"><div class="step-num">1</div><h3>Đăng ký</h3><p>Tạo tài khoản nhanh chóng</p></div>
     <div class="step"><div class="step-num">2</div><h3>Nạp số dư</h3><p>Chuyển khoản và gửi yêu cầu nạp</p></div>
-    <div class="step"><div class="step-num">3</div><h3>Admin duyệt</h3><p>Admin xác nhận thanh toán qua Telegram</p></div>
-    <div class="step"><div class="step-num">4</div><h3>Mua key</h3><p>Key tự động cấp khi đủ số dư</p></div>
+    <div class="step"><div class="step-num">3</div><h3>Admin duyệt</h3><p>Nhận thông báo Telegram, nhấn Duyệt</p></div>
+    <div class="step"><div class="step-num">4</div><h3>Mua key</h3><p>Số dư tự cộng, key tự cấp</p></div>
   </div>
 </section>
 
@@ -326,10 +330,17 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
     </div>
 
     <div id="admin-topup-panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-        <h3 style="margin:0;text-align:center;flex:1">⏳ Yêu cầu nạp tiền chờ duyệt</h3>
-        <button class="btn-sm" onclick="renderTopUpList()">🔄 Làm mới</button>
+      <div class="tg-setup">
+        <h4>📡 Cấu hình Telegram (quan trọng)</h4>
+        <p>Khi khách gửi yêu cầu nạp, bot sẽ gửi tin nhắn kèm nút <b>✅ Duyệt</b> / <b>❌ Từ chối</b> đến Telegram của bạn. Bạn chỉ cần nhấn nút trong Telegram — số dư khách sẽ tự động được cộng. Nếu chưa nhận được, hãy đảm bảo bạn đã <b>/start</b> với bot và <b>CHAT_ID</b> đúng.</p>
+        <div class="tg-setup-btns">
+          <button class="btn-sm" onclick="testTelegram()">📡 Test Telegram</button>
+          <button class="btn-sm" onclick="getChatId()">🔍 Lấy Chat ID</button>
+          <button class="btn-sm" onclick="renderTopUpList()">🔄 Làm mới</button>
+        </div>
       </div>
+      <h3 style="margin:0 0 16px;text-align:center">⏳ Yêu cầu nạp tiền</h3>
+      <p style="font-size:.76rem;color:var(--dim);text-align:center;margin-bottom:16px">Danh sách dưới đây hiển thị yêu cầu tạo trên trình duyệt này. Để duyệt yêu cầu từ khách (khác thiết bị), hãy nhấn nút Duyệt/Từ chối trong tin nhắn Telegram.</p>
       <div id="topup-list"></div>
     </div>
 
@@ -406,14 +417,14 @@ textarea{resize:vertical;font-family:'JetBrains Mono';font-size:.85rem}
         <label class="field-label">Nội dung chuyển khoản (bắt buộc):</label>
         <input type="text" id="pay-note" style="margin:0">
       </div>
-      <p class="warn">⏳ Sau khi chuyển khoản, nhấn Gửi yêu cầu. Số dư CHỈ được cộng sau khi admin duyệt qua Telegram.</p>
+      <p class="warn">⏳ Sau khi chuyển khoản, nhấn Gửi yêu cầu. Số dư CHỈ được cộng sau khi admin nhấn Duyệt trong Telegram.</p>
       <button class="btn-full" id="submit-pay-btn" onclick="submitPayment()">📨 Gửi yêu cầu nạp</button>
       <button class="btn-ghost" onclick="closeModal('payModal')">↩ Hủy</button>
     </div>
     <div id="pay-step-success" style="display:none;text-align:center;padding:20px 0">
       <div class="success-icon">⏳</div>
       <h2 style="font-family:'Space Grotesk';font-weight:700;margin-bottom:8px">Đã gửi yêu cầu nạp!</h2>
-      <p style="color:var(--muted);font-size:.88rem;margin-bottom:16px">Admin đã nhận thông báo qua Telegram. Số dư sẽ được cộng sau khi admin duyệt thanh toán.</p>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:16px">Admin đã nhận thông báo qua Telegram. Số dư sẽ tự động cộng ngay khi admin nhấn Duyệt. Giữ trang này mở để nhận kết quả.</p>
       <div class="success-box">
         <p style="font-size:.75rem;color:var(--dim);margin-bottom:4px">Nội dung CK:</p>
         <p id="success-note" style="color:var(--neon);font-weight:700"></p>
@@ -509,6 +520,10 @@ function addRevenue(v){localStorage.setItem('ff_revenue',String(getRevenue()+v))
 function getTopUpRequests(){return JSON.parse(localStorage.getItem('ff_topup_requests')||'[]');}
 function saveTopUpRequests(r){localStorage.setItem('ff_topup_requests',JSON.stringify(r));}
 
+// Pending codes (theo dõi mã chờ duyệt cho khách)
+function getPendingCodes(){return JSON.parse(localStorage.getItem('ff_pending_codes')||'[]');}
+function savePendingCodes(c){localStorage.setItem('ff_pending_codes',JSON.stringify(c));}
+
 // Đồng bộ lại giao diện khi admin/user mở nhiều tab cùng một website
 window.addEventListener('storage',function(e){
   if(['ff_users','ff_topup_requests','ff_keys','ff_revenue'].includes(e.key)){
@@ -534,6 +549,65 @@ function closeOnBg(e,id){if(e.target===document.getElementById(id))closeModal(id
 
 // ===== FORMAT =====
 function fmtMoney(v){return v.toLocaleString('vi-VN')+'đ';}
+
+// ===== TOAST =====
+function showToast(msg){
+  let toast=document.getElementById('ff-toast');
+  if(!toast){
+    toast=document.createElement('div');
+    toast.id='ff-toast';
+    toast.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card-solid);border:1px solid var(--border-neon);color:var(--text);padding:14px 24px;border-radius:12px;font-size:.88rem;font-weight:600;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.4);opacity:0;transition:opacity .3s;max-width:90vw;text-align:center';
+    document.body.appendChild(toast);
+  }
+  toast.textContent=msg;
+  toast.style.opacity='1';
+  clearTimeout(toast._timer);
+  toast._timer=setTimeout(()=>{toast.style.opacity='0';},6000);
+}
+
+// ===== TELEGRAM SETUP =====
+async function initTelegram(){
+  try{
+    // Xóa webhook cũ để getUpdates hoạt động
+    await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/deleteWebhook',{method:'POST'});
+  }catch(e){console.error('Telegram init error:',e);}
+}
+
+// Gửi tin nhắn test để kiểm tra Telegram
+async function testTelegram(){
+  try{
+    const res=await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:'✅ Test: Telegram hoạt động!\nNếu bạn nhận được tin này thì cấu hình đúng.'})
+    });
+    const data=await res.json();
+    if(data.ok){
+      alert('✅ Đã gửi tin nhắn test! Kiểm tra Telegram của bạn.');
+    }else{
+      alert('❌ Lỗi: '+(data.description||'không rõ')+'\n\nHãy đảm bảo:\n1. Bạn đã /start với bot\n2. TELEGRAM_CHAT_ID đúng (dùng nút Lấy Chat ID)');
+    }
+  }catch(e){
+    alert('❌ Lỗi kết nối: '+e.message);
+  }
+}
+
+// Lấy Chat ID từ getUpdates
+async function getChatId(){
+  try{
+    const res=await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/getUpdates');
+    const data=await res.json();
+    if(data.ok&&data.result.length>0){
+      const chatIds=[...new Set(data.result.map(u=>u.message?.chat?.id).filter(Boolean))];
+      const usernames=[...new Set(data.result.map(u=>u.message?.chat?.username).filter(Boolean))];
+      alert('Chat ID tìm thấy:\n'+chatIds.join('\n')+(usernames.length?'\n\nUsername: @'+usernames.join(', @'):'')+'\n\nHãy cập nhật TELEGRAM_CHAT_ID trong code (dòng const TELEGRAM_CHAT_ID).');
+    }else{
+      alert('Chưa có tin nhắn nào gửi đến bot.\n\nHãy mở Telegram, tìm bot của bạn, nhấn /start, sau đó nhấn lại nút này.');
+    }
+  }catch(e){
+    alert('❌ Lỗi: '+e.message);
+  }
+}
 
 // ===== AUTH =====
 let pendingReg={};let authTab='login';
@@ -633,21 +707,26 @@ async function sendTelegramNotification(username,email,password){
   try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});}catch(e){console.error('Telegram error:',e);}
 }
 
-// Gửi yêu cầu nạp tiền qua Telegram cho admin
+// Gửi yêu cầu nạp tiền qua Telegram cho admin — kèm nút Duyệt/Từ chối (callback)
 async function sendTopUpRequestTelegram(request){
   const timestamp=new Date().toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
-  const message="💰 YÊU CẦU NẠP TIỀN\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+request.user_name+"\n📧 Email: "+request.user_email+"\n💵 Số tiền: "+fmtMoney(request.amount)+"\n📝 Nội dung CK: "+request.note+"\n🆔 Mã yêu cầu: "+request.id+"\n🕐 Thời gian: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n⏳ Trạng thái: CHỜ DUYỆT\n\n⚠️ Vào Admin Panel để duyệt yêu cầu này.\n🌐 Nguồn: FF Proxy Delta";
-  try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});}catch(e){console.error('Telegram error:',e);}
+  const message="💰 YÊU CẦU NẠP TIỀN\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+request.user_name+"\n📧 Email: "+request.user_email+"\n💵 Số tiền: "+fmtMoney(request.amount)+"\n📝 Nội dung CK: "+request.note+"\n🆔 Mã yêu cầu: "+request.id+"\n🔑 Mã duyệt: "+request.code+"\n🕐 Thời gian: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n⏳ Trạng thái: CHỜ DUYỆT\n\n⚠️ Nhấn nút bên dưới để duyệt hoặc từ chối:\n🌐 FF Proxy Delta";
+  const keyboard={
+    inline_keyboard:[[
+      {text:"✅ Duyệt", callback_data:"APP:"+request.code},
+      {text:"❌ Từ chối", callback_data:"REJ:"+request.code}
+    ]]
+  };
+  try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message,reply_markup:keyboard})});}catch(e){console.error('Telegram error:',e);}
 }
 
-// Gửi kết quả duyệt qua Telegram
-async function sendTopUpResultTelegram(request,approved){
-  const timestamp=new Date().toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
-  const status=approved?'✅ ĐÃ DUYỆT':'❌ ĐÃ TỪ CHỐI';
-  const message=approved
-    ?"✅ YÊU CẦU NẠP ĐÃ DUYỆT\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+request.user_name+"\n📧 Email: "+request.user_email+"\n💵 Số tiền: "+fmtMoney(request.amount)+"\n📝 Nội dung CK: "+request.note+"\n🆔 Mã yêu cầu: "+request.id+"\n🕐 Thời gian duyệt: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n💰 Số dư đã được cộng vào tài khoản.\n🌐 FF Proxy Delta"
-    :"❌ YÊU CẦU NẠP BỊ TỪ CHỐI\n━━━━━━━━━━━━━━━━━━\n👤 Tài khoản: "+request.user_name+"\n📧 Email: "+request.user_email+"\n💵 Số tiền: "+fmtMoney(request.amount)+"\n📝 Nội dung CK: "+request.note+"\n🆔 Mã yêu cầu: "+request.id+"\n🕐 Thời gian từ chối: "+timestamp+"\n━━━━━━━━━━━━━━━━━━\n⚠️ Yêu cầu nạp bị từ chối. Số dư KHÔNG được cộng.\n🌐 FF Proxy Delta";
-  try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message})});}catch(e){console.error('Telegram error:',e);}
+// Trả lời callback (xóa spinner trên nút Telegram)
+async function answerCallback(cbId,text){
+  try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/answerCallbackQuery',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({callback_query_id:cbId,text:text})});}catch(e){}
+}
+// Sửa tin nhắn Telegram sau khi duyệt
+async function editCallbackMessage(chatId,msgId,text){
+  try{await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/editMessageText',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:chatId,message_id:msgId,text:text})});}catch(e){}
 }
 
 function doLogout(){setSession(null);document.getElementById('admin-page').style.display='none';updateAuthArea();renderPriceCards();}
@@ -671,6 +750,7 @@ function updateAuthArea(){
 function openBalance(){
   const s=getSession();
   if(!s){openAuth();return;}
+  pollTelegramApprovals(); // kiểm tra duyệt ngay khi mở
   document.getElementById('bal-show').textContent=fmtMoney(getBalance());
   // Hiển thị các yêu cầu nạp đang chờ duyệt của user
   const pendingInfo=document.getElementById('bal-pending-info');
@@ -702,7 +782,7 @@ function openTopUp(amount){
 }
 let curNote='',curTopUp=0;
 
-// ===== SỬA LỖI: KHÔNG CỘNG SỐ DƯ NGAY — tạo yêu cầu nạp, gửi Telegram admin duyệt =====
+// ===== KHÁCH GỬI YÊU CẦU NẠP — tạo mã, lưu, gửi Telegram kèm nút Duyệt/Từ chối =====
 async function submitPayment(){
   const s=getSession();
   if(!s){openAuth();return;}
@@ -711,8 +791,6 @@ async function submitPayment(){
 
   // Nếu nạp tùy chọn, phải nhập số tiền
   if(!amount||amount<=0){
-    const inputAmt=document.getElementById('pay-amount-label').textContent.trim();
-    // Nếu là "Nhập số tiền" thì yêu cầu user nhập
     const entered=prompt('Nhập số tiền đã chuyển (VND):');
     if(!entered){return;}
     amount=parseInt(entered.replace(/\D/g,''));
@@ -727,9 +805,13 @@ async function submitPayment(){
   btn.textContent='Đang gửi...';
   btn.disabled=true;
 
+  // Tạo mã ngắn để nhận diện khi admin nhấn nút Telegram
+  const code=Math.random().toString(36).substring(2,8).toUpperCase();
+
   // Tạo yêu cầu nạp — trạng thái PENDING (chưa cộng số dư)
   const request={
     id:'TOP'+Date.now()+Math.floor(Math.random()*1000),
+    code:code,
     user_email:s.email,
     user_name:s.name,
     amount:amount,
@@ -743,7 +825,12 @@ async function submitPayment(){
   requests.push(request);
   saveTopUpRequests(requests);
 
-  // Gửi thông báo Telegram cho admin
+  // Lưu mã chờ duyệt
+  const codes=getPendingCodes();
+  codes.push(code);
+  savePendingCodes(codes);
+
+  // Gửi thông báo Telegram cho admin (kèm nút Duyệt/Từ chối)
   await sendTopUpRequestTelegram(request);
 
   // Hiển thị thành công — số dư chưa cộng
@@ -756,6 +843,98 @@ async function submitPayment(){
   btn.disabled=false;
 
   updateAuthArea();
+  pollTelegramApprovals(); // bắt đầu kiểm tra kết quả duyệt
+}
+
+// ===== POLL TELEGRAM: khách tự động nhận kết quả duyệt =====
+let tgOffset=parseInt(localStorage.getItem('ff_tg_offset')||'0');
+let tgPolling=false;
+async function pollTelegramApprovals(){
+  const s=getSession();
+  if(!s||s.role==='admin')return; // admin không poll (admin dùng nút Telegram)
+  if(tgPolling)return;
+  // Chỉ poll khi có yêu cầu đang chờ
+  const pending=getTopUpRequests().filter(r=>r.user_email===s.email&&r.status==='pending');
+  if(pending.length===0)return;
+  tgPolling=true;
+  try{
+    const res=await fetch('https://api.telegram.org/bot'+TELEGRAM_BOT_TOKEN+'/getUpdates?offset='+tgOffset+'&timeout=0');
+    const data=await res.json();
+    if(data.ok&&data.result){
+      for(const update of data.result){
+        tgOffset=update.update_id+1;
+        localStorage.setItem('ff_tg_offset',String(tgOffset));
+        const cb=update.callback_query;
+        if(cb&&cb.data){
+          const parts=cb.data.split(':');
+          const action=parts[0];
+          const code=parts[1]||'';
+          if(action==='APP'){
+            await processApproval(code,cb);
+          }else if(action==='REJ'){
+            await processRejection(code,cb);
+          }
+        }
+      }
+    }
+  }catch(e){console.error('Poll error:',e);}
+  tgPolling=false;
+}
+
+// Xử lý khi admin nhấn Duyệt
+async function processApproval(code,cb){
+  const s=getSession();
+  if(!s)return;
+  const requests=getTopUpRequests();
+  const req=requests.find(r=>r.code===code&&r.user_email===s.email&&r.status==='pending');
+  if(!req){
+    if(cb)await answerCallback(cb.id,'⚠️ Không tìm thấy yêu cầu (có thể đã xử lý).');
+    return;
+  }
+  setBalance(getBalance()+req.amount);
+  req.status='approved';
+  req.reviewed_date=new Date().toISOString();
+  saveTopUpRequests(requests);
+  addRevenue(req.amount);
+  let codes=getPendingCodes().filter(c=>c!==code);
+  savePendingCodes(codes);
+  updateAuthArea();
+  renderPriceCards();
+  showToast('✅ Đã duyệt nạp '+fmtMoney(req.amount)+'! Số dư đã cộng.');
+  if(cb){
+    await answerCallback(cb.id,'✅ Đã duyệt! Số dư đã cộng '+fmtMoney(req.amount));
+    if(cb.message)await editCallbackMessage(cb.message.chat.id,cb.message.message_id,'✅ ĐÃ DUYỆT\n💰 '+fmtMoney(req.amount)+' → '+req.user_name+' ('+req.user_email+')');
+  }
+  // Cập nhật balance modal nếu đang mở
+  if(document.getElementById('balModal').classList.contains('active')){
+    document.getElementById('bal-show').textContent=fmtMoney(getBalance());
+    const pendingInfo=document.getElementById('bal-pending-info');
+    const pending=getTopUpRequests().filter(r=>r.user_email===s.email&&r.status==='pending');
+    pendingInfo.innerHTML=pending.length?'<div class="warn" style="text-align:left">⏳ Còn '+pending.length+' yêu cầu đang chờ duyệt.</div>':'';
+  }
+}
+
+// Xử lý khi admin nhấn Từ chối
+async function processRejection(code,cb){
+  const s=getSession();
+  if(!s)return;
+  const requests=getTopUpRequests();
+  const req=requests.find(r=>r.code===code&&r.user_email===s.email&&r.status==='pending');
+  if(!req){
+    if(cb)await answerCallback(cb.id,'⚠️ Không tìm thấy yêu cầu.');
+    return;
+  }
+  req.status='rejected';
+  req.reviewed_date=new Date().toISOString();
+  saveTopUpRequests(requests);
+  let codes=getPendingCodes().filter(c=>c!==code);
+  savePendingCodes(codes);
+  updateAuthArea();
+  showToast('❌ Yêu cầu nạp '+fmtMoney(req.amount)+' bị từ chối.');
+  if(cb){
+    await answerCallback(cb.id,'❌ Đã từ chối yêu cầu nạp');
+    if(cb.message)await editCallbackMessage(cb.message.chat.id,cb.message.message_id,'❌ ĐÃ TỪ CHỐI\n💰 '+fmtMoney(req.amount)+' → '+req.user_name+' ('+req.user_email+')');
+  }
 }
 
 // ===== BUY KEY WITH BALANCE =====
@@ -861,13 +1040,13 @@ function updateAdminStats(){
   document.getElementById('stat-revenue').textContent=fmtMoney(getRevenue());
 }
 
-// ===== ADMIN: DUYỆT NẠP TIỀN =====
+// ===== ADMIN: DANH SÁCH NẠP (trên trình duyệt này) =====
 function renderTopUpList(){
   const requests=getTopUpRequests().reverse();
   const list=document.getElementById('topup-list');
   updateAdminStats();
   if(requests.length===0){
-    list.innerHTML='<div class="empty-state">Chưa có yêu cầu nạp nào.</div>';
+    list.innerHTML='<div class="empty-state">Chưa có yêu cầu nạp nào trên trình duyệt này.<br>Yêu cầu từ khách sẽ đến qua Telegram.</div>';
     return;
   }
   list.innerHTML=requests.map(r=>{
@@ -876,12 +1055,13 @@ function renderTopUpList(){
     const timestamp=new Date(r.created_date).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
     return `
       <div class="topup-row">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:!px">
           <div style="flex:1;min-width:180px">
             <div class="topup-amount">${fmtMoney(r.amount)}</div>
             <div class="topup-info">
               👤 ${r.user_name} · 📧 ${r.user_email}<br>
               📝 Nội dung CK: <span style="color:var(--neon);font-family:'JetBrains Mono'">${r.note}</span><br>
+              🔑 Mã duyệt: <span style="color:var(--cyan);font-family:'JetBrains Mono'">${r.code||'—'}</span><br>
               🕐 ${timestamp}
             </div>
           </div>
@@ -898,13 +1078,13 @@ function renderTopUpList(){
   }).join('');
 }
 
+// Duyệt trong admin panel (chỉ tác dụng trên trình duyệt này)
 async function approveTopUp(requestId){
   if(!confirm('Duyệt yêu cầu nạp này? Số dư sẽ được cộng vào tài khoản user.'))return;
   const requests=getTopUpRequests();
   const req=requests.find(r=>r.id===requestId);
   if(!req){alert('Không tìm thấy yêu cầu.');return;}
   if(req.status!=='pending'){alert('Yêu cầu này đã được xử lý.');return;}
-  // CỘNG ĐÚNG SỐ DƯ CHO TÀI KHOẢN ĐÃ GỬI YÊU CẦU
   const targetUser=getUsers().find(u=>String(u.email||'').toLowerCase()===String(req.user_email||'').toLowerCase());
   if(!targetUser){alert('Không tìm thấy tài khoản khách hàng: '+req.user_email);return;}
   setBalance(getBalance(req.user_email)+req.amount,req.user_email);
@@ -912,12 +1092,10 @@ async function approveTopUp(requestId){
   req.status='approved';
   req.reviewed_date=new Date().toISOString();
   saveTopUpRequests(requests);
-  // Gửi kết quả qua Telegram
-  await sendTopUpResultTelegram(req,true);
   renderTopUpList();
   updateAuthArea();
   renderPriceCards();
-  alert('✅ Đã duyệt! Số dư đã cộng '+fmtMoney(req.amount)+'. Đã gửi thông báo Telegram.');
+  alert('✅ Đã duyệt! Số dư đã cộng '+fmtMoney(req.amount)+'.');
 }
 
 async function rejectTopUp(requestId){
@@ -931,10 +1109,8 @@ async function rejectTopUp(requestId){
   req.reviewed_date=new Date().toISOString();
   req.reject_reason=reason;
   saveTopUpRequests(requests);
-  // Gửi kết quả qua Telegram
-  await sendTopUpResultTelegram(req,false);
   renderTopUpList();
-  alert('❌ Đã từ chối yêu cầu nạp. Đã gửi thông báo Telegram.');
+  alert('❌ Đã từ chối yêu cầu nạp.');
 }
 
 // ===== ADMIN: QUẢN LÝ KEY =====
@@ -1020,8 +1196,13 @@ if(getKeys().length===0){
     {key_code:'FF-OB54-1D-QUICK42',plan:'Gói 1 Ngày',status:'available',buyer_email:'',id:8,created_date:new Date().toISOString()},
   ]);
 }
+
+// Khởi tạo Telegram + bắt đầu poll kết quả duyệt
+initTelegram();
 updateAuthArea();
 renderPriceCards();
+pollTelegramApprovals();
+setInterval(pollTelegramApprovals,10000); // kiểm tra duyệt mỗi 10 giây
 </script>
 </body>
 </html>
